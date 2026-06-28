@@ -78,23 +78,6 @@ export const getWeather = {
   },
 };
 
-export const getNews = {
-  description: 'Get the latest news headlines for a topic',
-  inputSchema: z.object({
-    topic: z.string().describe('The topic to search news for'),
-  }),
-  execute: async ({ topic }: { topic: string }) => {
-    // Replace with a real news API call
-    return {
-      topic,
-      articles: [
-        { title: `Breaking: Major development in ${topic}`, source: 'Reuters' },
-        { title: `${topic} update: What you need to know`, source: 'BBC' },
-        { title: `Experts weigh in on latest ${topic} news`, source: 'AP News' },
-      ],
-    };
-  },
-};
 
 export const getCurrentDateTime = {
   description: 'Get the current date and time in ISO format. Call this before any webSearch so queries include the correct date context.',
