@@ -1,4 +1,4 @@
-export type WeatherOutput = { city: string; temperature: number; unit: string; condition: string };
+export type WeatherOutput = { city: string; temperature: number; unit: string; condition: string; description?: string };
 
 const WEATHER_CONFIG: Record<string, { icon: string; gradient: string; textColor: string; subColor: string }> = {
   sunny:       { icon: '☀️',  gradient: 'from-amber-400 to-orange-400', textColor: 'text-amber-900',  subColor: 'text-amber-800' },
@@ -39,7 +39,7 @@ export function WeatherCard({ output }: { output: WeatherOutput }) {
           </span>
         </div>
         <p className={`mt-3 text-sm font-medium capitalize ${config.subColor}`}>
-          {output.condition}
+          {output.description ?? output.condition}
         </p>
       </div>
     </div>
