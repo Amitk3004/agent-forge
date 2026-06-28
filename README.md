@@ -7,7 +7,8 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 ## Features
 
 - **Streaming chat** — responses stream token-by-token using `useChat` from `@ai-sdk/react`
-- **Tool calling** — the model autonomously decides when to call tools, executes them server-side, and continues with a grounded response (up to 3 steps via `stopWhen: stepCountIs(3)`)
+- **Tool calling** — the model autonomously decides when to call tools, executes them server-side, and continues with a grounded response (up to 5 steps via `stopWhen: stepCountIs(5)`)
+- **Date-aware context** — today's date is injected into the system prompt and a hidden `getCurrentDateTime` tool lets the model confirm the exact timestamp before searching; the result is used as LLM context only and never shown in the UI
 - **Live status indicator** — shows which tool is running ("Searching the web…", "Fetching weather…") instead of a generic spinner
 - **Rich message rendering** — AI responses support full Markdown: headings, bold/italic, lists, code blocks, blockquotes, tables
 - **Per-tool UI cards** — each tool result gets its own styled card component
@@ -20,8 +21,8 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 | Tool | Description | API Required |
 |---|---|---|
 | `webSearch` | Searches the internet via Tavily for up-to-date information | Tavily API key |
-| `getWeather` | Returns weather conditions for a city with condition-aware card (sunny, rain, snow, etc.) | — (stub, plug in your own) |
-| `getNews` | Returns top headlines for a topic | — (stub, plug in your own) |
+| `getWeather` | Fetches live weather from WeatherAPI.com; normalises ~70 condition strings to 12 card themes | WeatherAPI key |
+| `getCurrentDateTime` | Returns the current ISO date/time as LLM context — **never rendered in the UI** | — |
 
 ---
 
@@ -33,6 +34,7 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 | AI SDK | Vercel AI SDK v6 (`ai`, `@ai-sdk/react`, `@ai-sdk/openai`) |
 | Model | OpenAI `gpt-4o-mini` |
 | Web Search | Tavily Search API |
+| Weather | WeatherAPI.com |
 | Styling | Tailwind CSS v3 + `@tailwindcss/typography` |
 | Markdown | `react-markdown` + `remark-gfm` |
 | Validation | Zod |
@@ -51,8 +53,7 @@ app/
 │   ├── StatusIndicator.tsx     # Live "Thinking / Searching…" indicator
 │   ├── ToolOutput.tsx          # Dispatcher: toolName → card component
 │   ├── WeatherCard.tsx         # Weather result card + gradient theming
-│   ├── SearchCard.tsx          # Web search results card
-│   └── NewsCard.tsx            # News headlines card
+│   └── SearchCard.tsx          # Web search results card
 └── api/
     └── chat/
         ├── route.ts            # POST handler — streamText + tool registration
@@ -76,10 +77,12 @@ Create a `.env.local` file in the project root:
 ```env
 OPENAI_API_KEY=sk-...
 TAVILY_API_KEY=tvly-...
+WEATHER_API_KEY=...
 ```
 
 - **OpenAI key** — [platform.openai.com](https://platform.openai.com/api-keys)
 - **Tavily key** — [app.tavily.com](https://app.tavily.com) (free tier available)
+- **WeatherAPI key** — [weatherapi.com](https://www.weatherapi.com) (free tier available)
 
 ### 3. Run the dev server
 
@@ -121,6 +124,8 @@ case 'myTool': return <MyToolCard output={part.output as MyToolOutput} />;
 ```
 
 The status indicator, streaming, and error handling are all automatic.
+
+> **Context-only tools** — if a tool should inform the LLM but never show output to the user (like `getCurrentDateTime`), return `null` in its `ToolOutput.tsx` case. The result is still passed to the model as part of the conversation history.
 
 ---
 

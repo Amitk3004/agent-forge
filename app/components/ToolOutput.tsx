@@ -1,7 +1,6 @@
 import { type DynamicToolUIPart, type UITools, type ToolUIPart, getToolName } from 'ai';
 import { WeatherCard, type WeatherOutput } from './WeatherCard';
 import { SearchCard, type SearchOutput } from './SearchCard';
-import { NewsCard, type NewsOutput } from './NewsCard';
 
 export function ToolOutput({ part }: { part: ToolUIPart<UITools> | DynamicToolUIPart }) {
   const toolName = getToolName(part);
@@ -12,9 +11,9 @@ export function ToolOutput({ part }: { part: ToolUIPart<UITools> | DynamicToolUI
 
   if (part.state === 'output-available') {
     switch (toolName) {
-      case 'getWeather': return <WeatherCard output={part.output as WeatherOutput} />;
-      case 'getNews':    return <NewsCard output={part.output as NewsOutput} />;
-      case 'webSearch':  return <SearchCard output={part.output as SearchOutput} />;
+      case 'getWeather':        return <WeatherCard output={part.output as WeatherOutput} />;
+      case 'webSearch':         return <SearchCard output={part.output as SearchOutput} />;
+      case 'getCurrentDateTime': return null;
       default:
         return (
           <pre className="bg-gray-100 rounded-xl px-4 py-3 text-xs overflow-auto">
