@@ -6,12 +6,15 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 
 ## Features
 
+- **Guided empty state** — clickable prompt chips on load covering all available tools; no blank-page confusion
 - **Streaming chat** — responses stream token-by-token using `useChat` from `@ai-sdk/react`
 - **Tool calling** — the model autonomously decides when to call tools, executes them server-side, and continues with a grounded response (up to 5 steps via `stopWhen: stepCountIs(5)`)
 - **Date-aware context** — today's date is injected into the system prompt and a hidden `getCurrentDateTime` tool lets the model confirm the exact timestamp before searching; the result is used as LLM context only and never shown in the UI
 - **Live status indicator** — shows which tool is running ("Searching the web…", "Fetching weather…") instead of a generic spinner
 - **Rich message rendering** — AI responses support full Markdown: headings, bold/italic, lists, code blocks, blockquotes, tables
 - **Per-tool UI cards** — each tool result gets its own styled card component
+- **Source attribution** — web search results show a domain badge (e.g. `reuters.com`) next to each link
+- **Copy to clipboard** — hover any assistant message to reveal a one-click copy button with confirmation flash
 - **Extensible architecture** — adding a new tool requires one tools file entry, one card component, and one `case` in the dispatcher
 
 ---
@@ -22,6 +25,7 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 |---|---|---|
 | `webSearch` | Searches the internet via Tavily for up-to-date information | Tavily API key |
 | `getWeather` | Fetches live weather from WeatherAPI.com; normalises ~70 condition strings to 12 card themes | WeatherAPI key |
+| `getStockPrice` | Fetches live stock quote from Alpha Vantage — price, change %, open/high/low | Alpha Vantage key |
 | `getCurrentDateTime` | Returns the current ISO date/time as LLM context — **never rendered in the UI** | — |
 
 ---
@@ -53,7 +57,9 @@ app/
 │   ├── StatusIndicator.tsx     # Live "Thinking / Searching…" indicator
 │   ├── ToolOutput.tsx          # Dispatcher: toolName → card component
 │   ├── WeatherCard.tsx         # Weather result card + gradient theming
-│   └── SearchCard.tsx          # Web search results card
+│   ├── StockCard.tsx           # Stock price card with change indicator
+│   ├── SearchCard.tsx          # Web search results card with source badges
+│   └── SuggestedPrompts.tsx    # Empty-state prompt chips
 └── api/
     └── chat/
         ├── route.ts            # POST handler — streamText + tool registration
@@ -78,11 +84,13 @@ Create a `.env.local` file in the project root:
 OPENAI_API_KEY=sk-...
 TAVILY_API_KEY=tvly-...
 WEATHER_API_KEY=...
+ALPHA_VANTAGE_API_KEY=...
 ```
 
 - **OpenAI key** — [platform.openai.com](https://platform.openai.com/api-keys)
 - **Tavily key** — [app.tavily.com](https://app.tavily.com) (free tier available)
 - **WeatherAPI key** — [weatherapi.com](https://www.weatherapi.com) (free tier available)
+- **Alpha Vantage key** — [alphavantage.co](https://www.alphavantage.co/support/#api-key) (free tier: 25 req/day)
 
 ### 3. Run the dev server
 
