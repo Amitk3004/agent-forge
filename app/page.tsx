@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 import { MessageBubble } from './components/MessageBubble';
 import { StatusIndicator } from './components/StatusIndicator';
+import { SuggestedPrompts } from './components/SuggestedPrompts';
 
 export default function ChatPage() {
   const { messages, sendMessage, status } = useChat();
@@ -23,7 +24,10 @@ export default function ChatPage() {
 
       <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.length === 0 && (
-          <p className="text-center text-gray-400 mt-20">Send a message to get started.</p>
+          <SuggestedPrompts
+            onSelect={(p) => { sendMessage({ text: p }); }}
+            disabled={isLoading}
+          />
         )}
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />

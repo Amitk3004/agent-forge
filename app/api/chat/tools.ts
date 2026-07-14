@@ -48,7 +48,7 @@ function normalizeCondition(raw: string): string {
 }
 
 export const getWeather = {
-  description: 'Get the current weather for a city',
+  description: 'Get the LIVE current weather for a city. Weather changes constantly — always call this tool for every weather query, even if you fetched the same city earlier in this conversation. Never reuse a previous result.',
   inputSchema: z.object({
     city: z.string().describe('The city name'),
   }),
@@ -78,6 +78,44 @@ export const getWeather = {
   },
 };
 
+
+export const getStockPrice = {
+  description: 'Get the LIVE current stock price for a symbol. Stock prices change every second — always call this tool for every stock query, even if you fetched the same symbol earlier in this conversation. Never reuse a previous result.',
+  inputSchema: z.object({
+    symbol: z.string().describe('The stock ticker symbol, e.g. AAPL'),
+  }),
+  execute: async ({ symbol }: { symbol: string }) => {
+    const key = process.env.ALPHA_VANTAGE_API_KEY;
+    if (!key) throw new Error('ALPHA_VANTAGE_API_KEY is not set');
+
+    const res = await fetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${key}`,
+    );
+
+    if (!res.ok) throw new Error(`Alpha Vantage error: ${res.status}`);
+
+    const data = await res.json();
+
+    if (data['Error Message']) throw new Error(data['Error Message']);
+    if (data['Note']) throw new Error('Alpha Vantage rate limit reached. Try again in a minute.');
+
+    const q = data['Global Quote'];
+    if (!q || !q['05. price']) throw new Error(`No data found for symbol "${symbol}"`);
+
+    const change = parseFloat(q['09. change']);
+    return {
+      symbol: q['01. symbol'],
+      price: parseFloat(q['05. price']),
+      change,
+      changePercent: q['10. change percent'],
+      open: parseFloat(q['02. open']),
+      high: parseFloat(q['03. high']),
+      low: parseFloat(q['04. low']),
+      volume: parseInt(q['06. volume'], 10),
+      positive: change >= 0,
+    };
+  },
+};
 
 export const getCurrentDateTime = {
   description: 'Get the current date and time in ISO format. Call this before any webSearch so queries include the correct date context.',

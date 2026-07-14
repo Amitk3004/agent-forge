@@ -3,7 +3,7 @@ import { type UIMessage, isToolUIPart, getToolName } from 'ai';
 const TOOL_LABELS: Record<string, string> = {
   webSearch: 'Searching the web',
   getWeather: 'Fetching weather',
-  getNews: 'Fetching news',
+  getStockPrice: 'Fetching stock data',
 };
 
 export function StatusIndicator({ messages, status }: { messages: UIMessage[]; status: string }) {

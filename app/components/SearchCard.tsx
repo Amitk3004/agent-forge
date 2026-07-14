@@ -14,15 +14,26 @@ export function SearchCard({ output }: { output: SearchOutput }) {
         </p>
       )}
       <ul className="space-y-2">
-        {output.results.map((r, i) => (
-          <li key={i}>
-            <a href={r.url} target="_blank" rel="noopener noreferrer"
-              className="font-medium text-blue-600 hover:underline">
-              {r.title}
-            </a>
-            <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{r.content}</p>
-          </li>
-        ))}
+        {output.results.map((r, i) => {
+          let domain = '';
+          try { domain = new URL(r.url).hostname.replace('www.', ''); } catch {}
+          return (
+            <li key={i}>
+              <div className="flex items-center flex-wrap gap-1.5">
+                <a href={r.url} target="_blank" rel="noopener noreferrer"
+                  className="font-medium text-blue-600 hover:underline">
+                  {r.title}
+                </a>
+                {domain && (
+                  <span className="inline-block bg-gray-100 text-gray-500 text-xs rounded-full px-2 py-0.5">
+                    {domain}
+                  </span>
+                )}
+              </div>
+              <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{r.content}</p>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

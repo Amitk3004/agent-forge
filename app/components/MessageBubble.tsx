@@ -1,9 +1,45 @@
 'use client';
 
 import { type UIMessage, isToolUIPart } from 'ai';
+import { useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolOutput } from './ToolOutput';
+
+function AssistantBubble({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="relative group">
+      <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-white border border-gray-200 text-sm text-gray-800
+        prose prose-sm max-w-none
+        prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:mt-3 prose-headings:mb-1
+        prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+        prose-p:my-1 prose-p:leading-relaxed
+        prose-strong:font-semibold prose-strong:text-gray-900
+        prose-em:italic prose-em:text-gray-700
+        prose-ul:my-1 prose-ul:pl-4 prose-li:my-0.5
+        prose-ol:my-1 prose-ol:pl-4
+        prose-code:bg-gray-100 prose-code:text-pink-600 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+        prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-xl prose-pre:p-3 prose-pre:text-xs prose-pre:overflow-x-auto
+        prose-blockquote:border-l-4 prose-blockquote:border-blue-300 prose-blockquote:pl-3 prose-blockquote:text-gray-500 prose-blockquote:italic
+        prose-a:text-blue-600 prose-a:underline prose-a:underline-offset-2
+        prose-hr:border-gray-200">
+        <Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
+      </div>
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 text-xs px-1"
+        title="Copy to clipboard"
+      >
+        {copied ? '✓' : '⧉'}
+      </button>
+    </div>
+  );
+}
 
 export function MessageBubble({ message }: { message: UIMessage }) {
   const isUser = message.role === 'user';
@@ -20,24 +56,7 @@ export function MessageBubble({ message }: { message: UIMessage }) {
                 </div>
               );
             }
-            return (
-              <div key={i} className="px-4 py-3 rounded-2xl rounded-bl-sm bg-white border border-gray-200 text-sm text-gray-800
-                prose prose-sm max-w-none
-                prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:mt-3 prose-headings:mb-1
-                prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
-                prose-p:my-1 prose-p:leading-relaxed
-                prose-strong:font-semibold prose-strong:text-gray-900
-                prose-em:italic prose-em:text-gray-700
-                prose-ul:my-1 prose-ul:pl-4 prose-li:my-0.5
-                prose-ol:my-1 prose-ol:pl-4
-                prose-code:bg-gray-100 prose-code:text-pink-600 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
-                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-xl prose-pre:p-3 prose-pre:text-xs prose-pre:overflow-x-auto
-                prose-blockquote:border-l-4 prose-blockquote:border-blue-300 prose-blockquote:pl-3 prose-blockquote:text-gray-500 prose-blockquote:italic
-                prose-a:text-blue-600 prose-a:underline prose-a:underline-offset-2
-                prose-hr:border-gray-200">
-                <Markdown remarkPlugins={[remarkGfm]}>{part.text}</Markdown>
-              </div>
-            );
+            return <AssistantBubble key={i} text={part.text} />;
           }
 
           if (isToolUIPart(part)) {
