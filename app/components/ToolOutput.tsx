@@ -2,6 +2,7 @@ import { type DynamicToolUIPart, type UITools, type ToolUIPart, getToolName } fr
 import { WeatherCard, type WeatherOutput } from './WeatherCard';
 import { SearchCard, type SearchOutput } from './SearchCard';
 import { StockCard, type StockOutput } from './StockCard';
+import { TimeZoneCard, type TimeZoneOutput } from './TimeZoneCard';
 
 export function ToolOutput({ part }: { part: ToolUIPart<UITools> | DynamicToolUIPart }) {
   const toolName = getToolName(part);
@@ -15,6 +16,7 @@ export function ToolOutput({ part }: { part: ToolUIPart<UITools> | DynamicToolUI
       case 'getWeather':        return <WeatherCard output={part.output as WeatherOutput} />;
       case 'webSearch':         return <SearchCard output={part.output as SearchOutput} />;
       case 'getStockPrice':     return <StockCard output={part.output as StockOutput} />;
+      case 'getTimeZone':       return <TimeZoneCard output={part.output as TimeZoneOutput} />;
       case 'getCurrentDateTime': return null;
       default:
         return (

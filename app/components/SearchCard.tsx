@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+
 export type SearchOutput = {
   query: string;
   answer: string | null;
@@ -5,6 +9,10 @@ export type SearchOutput = {
 };
 
 export function SearchCard({ output }: { output: SearchOutput }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? output.results : output.results.slice(0, 2);
+  const hidden = output.results.length - 2;
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm space-y-3">
       <p className="font-semibold text-gray-700">Search: {output.query}</p>
@@ -14,7 +22,7 @@ export function SearchCard({ output }: { output: SearchOutput }) {
         </p>
       )}
       <ul className="space-y-2">
-        {output.results.map((r, i) => {
+        {visible.map((r, i) => {
           let domain = '';
           try { domain = new URL(r.url).hostname.replace('www.', ''); } catch {}
           return (
@@ -35,6 +43,14 @@ export function SearchCard({ output }: { output: SearchOutput }) {
           );
         })}
       </ul>
+      {!expanded && hidden > 0 && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="text-xs text-blue-600 hover:underline"
+        >
+          Show {hidden} more result{hidden > 1 ? 's' : ''}
+        </button>
+      )}
     </div>
   );
 }

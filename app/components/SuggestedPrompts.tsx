@@ -2,9 +2,11 @@ const PROMPTS = [
   "What's the weather in Tokyo?",
   "Search for the latest AI news",
   "What's Apple's stock price?",
-  "Weather in New York",
+  "What time is it in London?",
   "Search for top programming languages in 2026",
   "What's Tesla's stock price?",
+  "What time is it in Dubai?",
+  "Weather in New York",
 ];
 
 export function SuggestedPrompts({

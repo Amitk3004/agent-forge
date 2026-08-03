@@ -1,6 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, convertToModelMessages, stepCountIs } from 'ai';
-import { getWeather, webSearch, getCurrentDateTime, getStockPrice } from './tools';
+import { getWeather, webSearch, getCurrentDateTime, getStockPrice, getTimeZone } from './tools';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
@@ -24,7 +24,7 @@ RULES:
 - Weather changes constantly. ALWAYS call getWeather for every weather-related question, even if the same city appeared earlier in this conversation. Never reuse a previous tool result for weather data.`,
     temperature: 0.1,
     messages: await convertToModelMessages(messages),
-    tools: { webSearch, getWeather, getCurrentDateTime, getStockPrice },
+    tools: { webSearch, getWeather, getCurrentDateTime, getStockPrice, getTimeZone },
     stopWhen: stepCountIs(5),
   });
 
