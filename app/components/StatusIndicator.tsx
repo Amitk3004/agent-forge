@@ -4,6 +4,7 @@ const TOOL_LABELS: Record<string, string> = {
   webSearch: 'Searching the web',
   getWeather: 'Fetching weather',
   getStockPrice: 'Fetching stock data',
+  getTimeZone: 'Looking up timezone',
 };
 
 export function StatusIndicator({ messages, status }: { messages: UIMessage[]; status: string }) {

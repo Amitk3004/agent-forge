@@ -1,21 +1,37 @@
 # AgentForge - AI Chat
 
-A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14**, and **Tailwind CSS**. Demonstrates real-time tool calling — the model can search the web, fetch weather, and retrieve news headlines, with each result rendered as a dedicated UI card directly in the chat.
+A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14**, and **Tailwind CSS**. The model can search the web, fetch live weather, look up stock prices, and check timezones — each result rendered as a dedicated UI card directly in the chat. Conversation history persists across page refreshes.
 
 ---
 
 ## Features
 
-- **Guided empty state** — clickable prompt chips on load covering all available tools; no blank-page confusion
+### Chat experience
 - **Streaming chat** — responses stream token-by-token using `useChat` from `@ai-sdk/react`
+- **Conversation persistence** — chat history saved to `localStorage` and restored on refresh with no flicker
+- **Branded header** — AgentForge logo, subtitle, and a clear chat button with tooltip
+- **Clear chat** — one-click reset that wipes both the UI and localStorage
+- **Guided empty state** — prompt chips covering all four tools shown only after localStorage is checked; no flicker
+- **Scroll-to-bottom button** — centered floating `↓` button appears when scrolled up; auto-hides at bottom
+- **Copy to clipboard** — hover any assistant message to reveal a one-click copy button with ✓ confirmation
+
+### Tool calling
 - **Tool calling** — the model autonomously decides when to call tools, executes them server-side, and continues with a grounded response (up to 5 steps via `stopWhen: stepCountIs(5)`)
-- **Date-aware context** — today's date is injected into the system prompt and a hidden `getCurrentDateTime` tool lets the model confirm the exact timestamp before searching; the result is used as LLM context only and never shown in the UI
+- **Date-aware context** — today's date is injected into the system prompt; `getCurrentDateTime` provides exact timestamp as LLM context only, never shown in UI
 - **Live status indicator** — shows which tool is running ("Searching the web…", "Fetching weather…") instead of a generic spinner
+- **Always-fresh data** — `getWeather`, `getStockPrice`, and `getTimeZone` are instructed to always re-call the tool, never reuse a cached result from earlier in the conversation
+
+### UI cards
 - **Rich message rendering** — AI responses support full Markdown: headings, bold/italic, lists, code blocks, blockquotes, tables
-- **Per-tool UI cards** — each tool result gets its own styled card component
-- **Source attribution** — web search results show a domain badge (e.g. `reuters.com`) next to each link
-- **Copy to clipboard** — hover any assistant message to reveal a one-click copy button with confirmation flash
-- **Extensible architecture** — adding a new tool requires one tools file entry, one card component, and one `case` in the dispatcher
+- **WeatherCard** — live conditions with gradient theme, plus feels-like, humidity, wind speed/direction, and UV index
+- **StockCard** — live price, change amount and %, open/high/low stats row
+- **TimeZoneCard** — local time, date, timezone abbreviation and UTC offset; no API key needed
+- **SearchCard** — Tavily results with domain source badges; shows 2 results by default with "Show X more" expand
+- **Source attribution** — domain badge (e.g. `reuters.com`) on every search result link
+
+### Architecture
+- **Extensible** — adding a new tool requires one tools file entry, one card component, and one `case` in the dispatcher
+- **Context-only tools** — tools that should never show UI (like `getCurrentDateTime`) return `null` in `ToolOutput.tsx`; result still reaches the LLM
 
 ---
 
@@ -24,8 +40,9 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 | Tool | Description | API Required |
 |---|---|---|
 | `webSearch` | Searches the internet via Tavily for up-to-date information | Tavily API key |
-| `getWeather` | Fetches live weather from WeatherAPI.com; normalises ~70 condition strings to 12 card themes | WeatherAPI key |
+| `getWeather` | Fetches live weather from WeatherAPI.com; normalises ~70 condition strings to 12 card themes; returns feels-like, humidity, wind, UV | WeatherAPI key |
 | `getStockPrice` | Fetches live stock quote from Alpha Vantage — price, change %, open/high/low | Alpha Vantage key |
+| `getTimeZone` | Returns local time, date, and UTC offset for a city using Node's `Intl` API — 32-city lookup map | — |
 | `getCurrentDateTime` | Returns the current ISO date/time as LLM context — **never rendered in the UI** | — |
 
 ---
@@ -39,6 +56,8 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 | Model | OpenAI `gpt-4o-mini` |
 | Web Search | Tavily Search API |
 | Weather | WeatherAPI.com |
+| Stocks | Alpha Vantage |
+| Persistence | Browser `localStorage` |
 | Styling | Tailwind CSS v3 + `@tailwindcss/typography` |
 | Markdown | `react-markdown` + `remark-gfm` |
 | Validation | Zod |
@@ -49,17 +68,19 @@ A streaming AI chat interface built with the **Vercel AI SDK v6**, **Next.js 14*
 
 ```
 app/
-├── page.tsx                    # Chat shell — input, message list, status
+├── page.tsx                    # Chat shell — persistence, scroll, clear chat
 ├── layout.tsx                  # Root layout
 ├── globals.css                 # Tailwind base styles
 ├── components/
+│   ├── Header.tsx              # Branded header with clear chat button + tooltip
 │   ├── MessageBubble.tsx       # Renders a single message (text + tool parts)
 │   ├── StatusIndicator.tsx     # Live "Thinking / Searching…" indicator
 │   ├── ToolOutput.tsx          # Dispatcher: toolName → card component
-│   ├── WeatherCard.tsx         # Weather result card + gradient theming
+│   ├── WeatherCard.tsx         # Weather card with conditions + stats grid
 │   ├── StockCard.tsx           # Stock price card with change indicator
-│   ├── SearchCard.tsx          # Web search results card with source badges
-│   └── SuggestedPrompts.tsx    # Empty-state prompt chips
+│   ├── TimeZoneCard.tsx        # Timezone card — local time, date, UTC offset
+│   ├── SearchCard.tsx          # Collapsible search results with source badges
+│   └── SuggestedPrompts.tsx    # Empty-state prompt chips (shown after hydration)
 └── api/
     └── chat/
         ├── route.ts            # POST handler — streamText + tool registration

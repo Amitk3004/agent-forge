@@ -71,9 +71,14 @@ export const getWeather = {
     return {
       city: data.location?.name ?? city,
       temperature: Math.round(data.current.temp_c),
+      feelsLike: Math.round(data.current.feelslike_c),
       unit: 'celsius',
       condition: normalizeCondition(raw),
       description: raw,
+      humidity: data.current.humidity,
+      windKph: Math.round(data.current.wind_kph),
+      windDir: data.current.wind_dir,
+      uvIndex: data.current.uv,
     };
   },
 };
@@ -114,6 +119,51 @@ export const getStockPrice = {
       volume: parseInt(q['06. volume'], 10),
       positive: change >= 0,
     };
+  },
+};
+
+const TIMEZONE_MAP: Record<string, string> = {
+  'new york': 'America/New_York', 'los angeles': 'America/Los_Angeles',
+  'chicago': 'America/Chicago', 'toronto': 'America/Toronto',
+  'sao paulo': 'America/Sao_Paulo', 'london': 'Europe/London',
+  'paris': 'Europe/Paris', 'berlin': 'Europe/Berlin',
+  'madrid': 'Europe/Madrid', 'rome': 'Europe/Rome',
+  'amsterdam': 'Europe/Amsterdam', 'zurich': 'Europe/Zurich',
+  'stockholm': 'Europe/Stockholm', 'moscow': 'Europe/Moscow',
+  'dubai': 'Asia/Dubai', 'mumbai': 'Asia/Kolkata',
+  'delhi': 'Asia/Kolkata', 'kolkata': 'Asia/Kolkata',
+  'bangkok': 'Asia/Bangkok', 'singapore': 'Asia/Singapore',
+  'hong kong': 'Asia/Hong_Kong', 'shanghai': 'Asia/Shanghai',
+  'beijing': 'Asia/Shanghai', 'tokyo': 'Asia/Tokyo',
+  'seoul': 'Asia/Seoul', 'sydney': 'Australia/Sydney',
+  'melbourne': 'Australia/Melbourne', 'auckland': 'Pacific/Auckland',
+  'cairo': 'Africa/Cairo', 'nairobi': 'Africa/Nairobi',
+  'johannesburg': 'Africa/Johannesburg', 'lagos': 'Africa/Lagos',
+};
+
+export const getTimeZone = {
+  description: 'Get the current local time and timezone info for a city.',
+  inputSchema: z.object({
+    city: z.string().describe('The city name, e.g. Tokyo, London, New York'),
+  }),
+  execute: async ({ city }: { city: string }) => {
+    const key = city.toLowerCase().trim();
+    const timezone = TIMEZONE_MAP[key];
+    if (!timezone) {
+      const supported = Object.keys(TIMEZONE_MAP).map(c => c.replace(/\b\w/g, l => l.toUpperCase())).join(', ');
+      throw new Error(`Timezone not found for "${city}". Supported cities: ${supported}`);
+    }
+
+    const now = new Date();
+    const fmt = (opts: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat('en-US', { timeZone: timezone, ...opts }).format(now);
+
+    const localTime = fmt({ hour: '2-digit', minute: '2-digit', hour12: true });
+    const localDate = fmt({ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const abbreviation = fmt({ timeZoneName: 'short' }).split(' ').pop() ?? '';
+    const offsetStr = fmt({ timeZoneName: 'longOffset' }).match(/GMT[+-]\d+:\d+|GMT/)?.[0] ?? 'UTC';
+
+    return { city: city.replace(/\b\w/g, l => l.toUpperCase()), timezone, localTime, localDate, utcOffset: offsetStr, abbreviation };
   },
 };
 
