@@ -6,23 +6,44 @@ import { MessageBubble } from './components/MessageBubble';
 import { StatusIndicator } from './components/StatusIndicator';
 import { SuggestedPrompts } from './components/SuggestedPrompts';
 import { Header } from './components/Header';
+import { SettingsPanel } from './components/SettingsPanel';
+import { DEFAULT_MODEL_KEY, getModel, type SamplingSettings } from '@/lib/models';
 
 const STORAGE_KEY = 'agentforge-chat';
+const SETTINGS_KEY = 'agentforge-settings';
 
 export default function ChatPage() {
-  const { messages, sendMessage, status, setMessages } = useChat();
+  const { messages, sendMessage, stop, status, setMessages, error } = useChat();
   const [input, setInput] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [modelKey, setModelKey] = useState(DEFAULT_MODEL_KEY);
+  const [settings, setSettings] = useState<SamplingSettings>({});
   const isLoading = status === 'streaming' || status === 'submitted';
 
-  // Restore persisted messages after mount (client-only)
+  // Restore persisted messages and settings after mount (client-only)
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) setMessages(JSON.parse(stored));
+      const storedSettings = localStorage.getItem(SETTINGS_KEY);
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        setModelKey(getModel(parsed.modelKey).key);
+        setSettings(parsed.settings ?? {});
+      }
     } catch {}
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ modelKey, settings }));
+    } catch {}
+  }, [hydrated, modelKey, settings]);
+
+  // Each request carries the current model + sampling settings; the history itself is the memory.
+  const send = (text: string) => sendMessage({ text }, { body: { modelKey, settings } });
 
   // Persist messages to localStorage on every change
   useEffect(() => {
@@ -64,14 +85,20 @@ export default function ChatPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    sendMessage({ text: input });
+    send(input);
     setInput('');
   };
 
   return (
     <main className="flex flex-col h-screen max-w-2xl mx-auto relative">
-      <Header onClear={clearChat} disabled={isLoading} />
-
+      <Header onClear={clearChat} disabled={isLoading} showClear={hydrated && messages.length > 0} />
+      <SettingsPanel
+        modelKey={modelKey}
+        settings={settings}
+        onModelChange={(key) => { setModelKey(key); setSettings({}); }}
+        onSettingsChange={setSettings}
+        disabled={isLoading}
+      />
       <div
         ref={listRef}
         onScroll={handleScroll}
@@ -79,7 +106,7 @@ export default function ChatPage() {
       >
         {hydrated && messages.length === 0 && (
           <SuggestedPrompts
-            onSelect={(p) => { sendMessage({ text: p }); }}
+            onSelect={send}
             disabled={isLoading}
           />
         )}
@@ -87,6 +114,11 @@ export default function ChatPage() {
           <MessageBubble key={m.id} message={m} />
         ))}
         <StatusIndicator messages={messages} status={status} />
+        {error && (
+          <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <span className="font-semibold">Request failed:</span> {error.message}
+          </div>
+        )}
       </div>
 
       {showScrollBtn && (
@@ -109,13 +141,23 @@ export default function ChatPage() {
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
         />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="bg-blue-600 text-white rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors"
-        >
-          Send
-        </button>
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={stop}
+            className="bg-red-500 text-white rounded-full px-5 py-2 text-sm font-medium hover:bg-red-600 transition-colors"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors"
+          >
+            Send
+          </button>
+        )}
       </form>
     </main>
   );

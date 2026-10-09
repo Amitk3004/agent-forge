@@ -1,4 +1,12 @@
-export function Header({ onClear, disabled }: { onClear: () => void; disabled: boolean }) {
+export function Header({
+  onClear,
+  disabled,
+  showClear,
+}: {
+  onClear: () => void;
+  disabled: boolean;
+  showClear: boolean;
+}) {
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-2.5">
@@ -10,6 +18,7 @@ export function Header({ onClear, disabled }: { onClear: () => void; disabled: b
           <p className="text-xs text-gray-400 mt-0.5">AI Assistant</p>
         </div>
       </div>
+      {showClear && (
       <div className="relative group">
         <button
           onClick={onClear}
@@ -28,6 +37,7 @@ export function Header({ onClear, disabled }: { onClear: () => void; disabled: b
           Clear chat
         </div>
       </div>
+      )}
     </header>
   );
 }

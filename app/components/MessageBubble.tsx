@@ -4,12 +4,40 @@ import { type UIMessage, isToolUIPart } from 'ai';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Check, Copy } from 'lucide-react';
 import { ToolOutput } from './ToolOutput';
+import { GuardrailCard } from './GuardrailCard';
+import type { GuardrailData } from '@/lib/guardrail-types';
 
-function AssistantBubble({ text }: { text: string }) {
+// Action row shown under a message; hidden until the message (the `group`) is hovered
+// or focused, but it keeps its height so the layout doesn't jump on hover.
+function MessageActions({ text, align }: { text: string; align: 'left' | 'right' }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="relative group">
+    <div
+      className={`flex mt-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity
+        ${align === 'right' ? 'justify-end' : 'justify-start'}`}
+    >
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors
+          ${copied ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}
+        title="Copy to clipboard"
+      >
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  );
+}
+
+function AssistantBubble({ text }: { text: string }) {
+  return (
+    <div className="group">
       <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-white border border-gray-200 text-sm text-gray-800
         prose prose-sm max-w-none
         prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:mt-3 prose-headings:mb-1
@@ -26,17 +54,7 @@ function AssistantBubble({ text }: { text: string }) {
         prose-hr:border-gray-200">
         <Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
       </div>
-      <button
-        onClick={() => {
-          navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 text-xs px-1"
-        title="Copy to clipboard"
-      >
-        {copied ? '✓' : '⧉'}
-      </button>
+      <MessageActions text={text} align="left" />
     </div>
   );
 }
@@ -51,12 +69,19 @@ export function MessageBubble({ message }: { message: UIMessage }) {
           if (part.type === 'text') {
             if (isUser) {
               return (
-                <div key={i} className="px-4 py-2 rounded-2xl rounded-br-sm bg-blue-600 text-white text-sm whitespace-pre-wrap">
-                  {part.text}
+                <div key={i} className="group">
+                  <div className="px-4 py-2 rounded-2xl rounded-br-sm bg-blue-600 text-white text-sm whitespace-pre-wrap">
+                    {part.text}
+                  </div>
+                  <MessageActions text={part.text} align="right" />
                 </div>
               );
             }
             return <AssistantBubble key={i} text={part.text} />;
+          }
+
+          if (part.type === 'data-guardrail') {
+            return <GuardrailCard key={i} data={part.data as GuardrailData} />;
           }
 
           if (isToolUIPart(part)) {
