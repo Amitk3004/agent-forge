@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const now = new Date();
-  const currentDate = now.toISOString().split('T')[0]; // "2026-06-03"
+  const currentDate = now.toISOString().split('T')[0];
 
   const result = streamText({
     model: openai('gpt-4o-mini'),

@@ -44,6 +44,9 @@ The goal: demonstrate a production-grade agentic AI system covering the full spe
 - **TimeZoneCard** — indigo/purple gradient with local time, date, timezone abbreviation and UTC offset
 - **SearchCard** — Tavily results with domain source badges; collapsible (shows 2 by default, expand to see all)
 
+### Streaming & Controls
+- **Streaming abort** — Send button swaps to red Stop button during generation; calls `useChat.stop()` which aborts the fetch and closes the server stream cleanly
+
 ### Architecture
 - **Per-tool UI cards** — each tool result renders as a dedicated typed component
 - **Tool dispatcher pattern** — `ToolOutput.tsx` maps `toolName → card` in one place
@@ -57,7 +60,6 @@ The goal: demonstrate a production-grade agentic AI system covering the full spe
 ### 🔜 Near-term additions
 Low-effort, high-impact features that fit naturally into the current architecture.
 
-- **Streaming abort / cancel button** — stop an in-flight generation mid-stream; `useChat` exposes a `stop()` method
 - **Error card component** — replace the bare red `<p>` on tool failures with a styled error card consistent with the rest of the UI
 - **Currency converter tool** — convert between currencies using a free exchange rate API (no key needed); `CurrencyCard` component
 - **Calculator tool** — evaluate math expressions server-side using `mathjs`; zero API cost
@@ -82,7 +84,6 @@ Giving the model awareness of past interactions and user context.
 
 - **Short-term memory** — sliding window of recent messages with token-aware pruning
 - **Long-term memory** — persist user preferences and key facts across sessions (vector store or KV)
-- **Semantic retrieval** — embed and retrieve relevant past context at query time (RAG-lite)
 - **Memory UI** — display what the model "remembers" about the user in a side panel
 
 ---
