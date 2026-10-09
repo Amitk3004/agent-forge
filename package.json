@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^4.0.193",
     "@ai-sdk/openai": "^3.0.63",
     "@ai-sdk/react": "^3.0.179",
+    "@aws-sdk/client-bedrock-runtime": "^3.1148.0",
     "@tailwindcss/typography": "^0.5.19",
     "ai": "^6.0.177",
     "lucide-react": "^0.400.0",
