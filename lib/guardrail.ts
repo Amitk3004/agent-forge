@@ -4,6 +4,7 @@ import {
   type GuardrailAssessment,
 } from '@aws-sdk/client-bedrock-runtime';
 import type { GuardrailData, GuardrailFinding } from './guardrail-types';
+import { awsCredentials, awsRegion } from './aws';
 
 const guardrailId = process.env.BEDROCK_GUARDRAIL_ID;
 const guardrailVersion = process.env.BEDROCK_GUARDRAIL_VERSION;
@@ -11,8 +12,8 @@ const guardrailVersion = process.env.BEDROCK_GUARDRAIL_VERSION;
 // Both env vars must be set; otherwise input checks are skipped.
 export const GUARDRAIL_ENABLED = Boolean(guardrailId && guardrailVersion);
 
-// Picks up AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from the environment, like the model call.
-const client = new BedrockRuntimeClient({ region: process.env.AWS_REGION ?? 'ap-south-1' });
+// Same region and credentials as the model call (see lib/aws.ts).
+const client = new BedrockRuntimeClient({ region: awsRegion, credentials: awsCredentials });
 
 function collectFindings(assessments: GuardrailAssessment[] = []): GuardrailFinding[] {
   const findings: GuardrailFinding[] = [];

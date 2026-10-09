@@ -160,10 +160,10 @@ All in the **same region** (this project uses `ap-south-1`):
 Copy `.env.example` to `.env.local` and fill in:
 
 ```env
-# Amazon Bedrock
-AWS_REGION=ap-south-1
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
+# Amazon Bedrock — BEDROCK_* names, because Vercel reserves AWS_* (see lib/aws.ts)
+BEDROCK_REGION=ap-south-1
+BEDROCK_ACCESS_KEY_ID=...
+BEDROCK_SECRET_ACCESS_KEY=...
 
 # Bedrock Guardrails (input checks are skipped if either is unset)
 BEDROCK_GUARDRAIL_ID=...
@@ -186,6 +186,15 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Restart the dev server after changing `.env.local`.
+
+---
+
+## Deploying to Vercel
+
+1. Import the repo in Vercel (framework: Next.js, detected automatically).
+2. Add the same variables under **Settings → Environment Variables**. Use the `BEDROCK_*` names — `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` are reserved by Vercel, and `AWS_REGION` there points at Vercel's own region. Use a dedicated IAM user for production and a numbered guardrail version.
+3. Functions run in Mumbai (`bom1`, set in `vercel.json`) to sit next to Bedrock in `ap-south-1`.
+4. Before sharing the URL, add rate limiting or access protection — `/api/chat` spends Bedrock and tool-API credits on every call.
 
 ---
 

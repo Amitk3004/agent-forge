@@ -11,12 +11,13 @@ import { getWeather, webSearch, getCurrentDateTime, getStockPrice, getTimeZone }
 import { getModel, type ModelConfig, type SamplingParam, type SamplingSettings } from '@/lib/models';
 import { TOOLS_ENABLED } from '@/lib/features';
 import { GUARDRAIL_ENABLED, checkInput } from '@/lib/guardrail';
+import { awsCredentials, awsRegion } from '@/lib/aws';
 import type { GuardrailData } from '@/lib/guardrail-types';
 
 export const maxDuration = 60;
 
-// Credentials come from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (/ AWS_SESSION_TOKEN).
-const bedrock = createAmazonBedrock({ region: process.env.AWS_REGION ?? 'ap-south-1' });
+// Region and credentials: see lib/aws.ts (BEDROCK_* env vars, since Vercel reserves AWS_*).
+const bedrock = createAmazonBedrock({ region: awsRegion, ...awsCredentials });
 
 function buildSystemPrompt(now: Date) {
   const currentDate = now.toISOString().split('T')[0];
