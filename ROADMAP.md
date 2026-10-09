@@ -20,22 +20,52 @@ The goal: demonstrate a production-grade agentic AI system covering the full spe
 ### Core Chat
 - **Streaming chat UI** — token-by-token streaming via `useChat` (`@ai-sdk/react`)
 - **Rich Markdown rendering** — headings, bold/italic, code blocks, tables, blockquotes via `react-markdown` + `remark-gfm`
-- **Live status indicator** — shows active tool name ("Searching the web…") instead of a generic spinner
+- **Live status indicator** — shows active tool name ("Searching the web…", "Fetching stock data…") instead of a generic spinner
+- **Conversation persistence** — chat history saved to `localStorage` and restored on page refresh with no hydration flicker
+- **Clear chat** — one-click reset that wipes both the UI and localStorage
+- **Branded header** — AgentForge logo, subtitle, and visible clear chat button with tooltip
+- **Guided empty state** — prompt chips covering all four tools, shown only after localStorage check to prevent flicker
+- **Scroll-to-bottom button** — centered floating `↓` button appears when scrolled up; auto-hides at bottom
+- **Copy to clipboard** — hover any assistant message to reveal a one-click copy button with ✓ confirmation flash
 
 ### Tool Calling
-- **Multi-step tool execution** — model calls tools, receives results, and continues generating (up to 3 steps via `stopWhen: stepCountIs`)
-- **`webSearch`** — live internet search via Tavily API with sourced results card
-- **`getWeather`** — weather lookup with condition-aware gradient card (sunny, rain, snow, storm…)
-- **`getNews`** — news headlines per topic
+- **Multi-step tool execution** — model calls tools, receives results, and continues generating (up to 5 steps via `stopWhen: stepCountIs`)
+- **Date-aware context** — today's date injected into system prompt; `getCurrentDateTime` provides exact timestamp as LLM-only context
+- **Always-fresh tool calls** — `getWeather`, `getStockPrice`, and `getTimeZone` are prompted to never reuse a cached result from earlier in the conversation
+- **`webSearch`** — live internet search via Tavily API
+- **`getWeather`** — live weather from WeatherAPI.com with condition-aware gradient card; shows feels-like, humidity, wind speed/direction, UV index
+- **`getStockPrice`** — live stock quote from Alpha Vantage — price, change %, open/high/low stats row
+- **`getTimeZone`** — local time, date, and UTC offset for a city via Node's `Intl` API; 32-city lookup map, no API key needed
+- **`getCurrentDateTime`** — returns ISO date/time as LLM context only, never shown in UI
+
+### UI Cards
+- **WeatherCard** — condition-aware gradient with emoji icon + stats grid (feels-like, humidity, wind, UV)
+- **StockCard** — price, green/red change indicator with ↑↓ arrows, open/high/low stats
+- **TimeZoneCard** — indigo/purple gradient with local time, date, timezone abbreviation and UTC offset
+- **SearchCard** — Tavily results with domain source badges; collapsible (shows 2 by default, expand to see all)
 
 ### Architecture
 - **Per-tool UI cards** — each tool result renders as a dedicated typed component
 - **Tool dispatcher pattern** — `ToolOutput.tsx` maps `toolName → card` in one place
-- **Component-based layout** — `MessageBubble`, `StatusIndicator`, `ToolOutput` are independent and composable
+- **Context-only tool pattern** — tools that inform the LLM but return `null` in UI (e.g. `getCurrentDateTime`)
+- **Component-based layout** — `Header`, `MessageBubble`, `StatusIndicator`, `ToolOutput`, `SuggestedPrompts` are independent and composable
 
 ---
 
 ## 📋 Planned
+
+### 🔜 Near-term additions
+Low-effort, high-impact features that fit naturally into the current architecture.
+
+- **Streaming abort / cancel button** — stop an in-flight generation mid-stream; `useChat` exposes a `stop()` method
+- **Error card component** — replace the bare red `<p>` on tool failures with a styled error card consistent with the rest of the UI
+- **Currency converter tool** — convert between currencies using a free exchange rate API (no key needed); `CurrencyCard` component
+- **Calculator tool** — evaluate math expressions server-side using `mathjs`; zero API cost
+- **Keyboard shortcuts** — `Cmd+Enter` to send, `Esc` to cancel streaming; small UX gain for power users
+- **Message timestamps** — subtle timestamp on each message bubble, visible on hover
+- **Conversation export** — download chat as Markdown or JSON; pure client-side, no backend needed
+
+---
 
 ### 🛡️ Guardrails
 Input and output safety controls that prevent misuse and enforce response quality.
@@ -60,7 +90,7 @@ Giving the model awareness of past interactions and user context.
 ### 💾 Checkpoints
 Save and restore conversation state at any point.
 
-- **Conversation snapshots** — serialize full message history + tool results to persistent storage
+- **Named conversation sessions** — save a conversation with a title and switch between multiple sessions *(localStorage persistence is already in place as the foundation)*
 - **Resume from checkpoint** — reload a past conversation and continue where it left off
 - **Branch conversations** — fork from any checkpoint and explore alternative paths
 - **Checkpoint timeline UI** — visual history of saved states the user can jump to
@@ -118,7 +148,7 @@ Understand what the model is doing and why.
 ### ⚡ Performance & Cost
 - **Prompt caching** — cache repeated system prompts and context prefixes (Anthropic / OpenAI)
 - **Model switching** — toggle between models (GPT-4o-mini, GPT-4o, Claude) per conversation
-- **Streaming abort** — cancel an in-flight generation without waiting for completion
+- **Token-aware context pruning** — automatically trim old messages when context window approaches limit
 
 ---
 

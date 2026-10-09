@@ -10,7 +10,7 @@ import { Header } from './components/Header';
 const STORAGE_KEY = 'agentforge-chat';
 
 export default function ChatPage() {
-  const { messages, sendMessage, status, setMessages } = useChat();
+  const { messages, sendMessage, stop, status, setMessages } = useChat();
   const [input, setInput] = useState('');
   const [hydrated, setHydrated] = useState(false);
   const isLoading = status === 'streaming' || status === 'submitted';
@@ -109,13 +109,23 @@ export default function ChatPage() {
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
         />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="bg-blue-600 text-white rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors"
-        >
-          Send
-        </button>
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={stop}
+            className="bg-red-500 text-white rounded-full px-5 py-2 text-sm font-medium hover:bg-red-600 transition-colors"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors"
+          >
+            Send
+          </button>
+        )}
       </form>
     </main>
   );
